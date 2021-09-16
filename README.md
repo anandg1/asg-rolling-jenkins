@@ -176,4 +176,4 @@ Replace jenkins-server-IP with original IP/
 GitHub hook trigger for GITScm Polling
 ```
 ## Conclusion:
-Deplyoing ASG rolling update using GIT and Jenkins has been completed successfully
+Deploying ASG rolling update using GIT and Jenkins has been completed successfully
