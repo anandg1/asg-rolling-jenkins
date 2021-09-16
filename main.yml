@@ -1,0 +1,115 @@
+---
+- name: "Dynamic Invetory Of Autoscaling Group"
+  hosts: localhost
+  vars:
+    access_key: "AKIAYEN6726H5VGJZ3H6" 
+    secret_key: "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"
+    region: "ap-south-1"
+
+  tasks:
+    - name: "Fetching details of ASG EC2 Instances"
+      ec2_instance_info:
+        aws_access_key: "{{ access_key }}"
+        aws_secret_key: "{{ secret_key }}"
+        region: "{{ region }}"
+        filters:
+          "tag:aws:autoscaling:groupName": "MyASG"
+          instance-state-name: [ "running"]
+      register: asgValue
+
+    - name: "Dynamic Inventory Of ASG"
+      add_host:
+        name: "{{ item.public_ip_address }}"
+        groups: "asg"
+        ansible_host: "{{ item.public_ip_address }}"
+        ansible_port: 22
+        ansible_user: "ubuntu"
+        ansible_ssh_private_key_file: "/root/ansible/day09/devops.pem"
+        ansible_ssh_common_args: "-o StrictHostKeyChecking=no"        
+      with_items:
+        - "{{ asgValue.instances }}"
+  
+
+- name: "Deploying website from Github"
+  hosts: asg
+  become: true
+  serial: 1
+  vars:
+    gitRepo: "https://github.com/anandg1/test.git"
+    cloneDir: "/var/git/"
+    docRoot: "/var/www/html/"
+    health_time: "25"
+  tasks:
+    - name: "Installing Apache"
+      apt:
+        update_cache: true
+        name:
+          - apache2
+          - git
+        state: present
+
+    - name: "Clone directory creation"
+      file:
+        path: "{{ cloneDir }}"
+        state: directory
+
+    - name: "Cloning Repo from git"
+      git:
+       repo: "{{ gitRepo }}"
+       dest: "{{ cloneDir }}"
+      register: cloneValue
+
+    - name: "Disable HealthCheck"
+      when: cloneValue.changed
+      file:
+        path: "/var/www/html/health.txt"
+        state: file
+        mode: 0000
+            
+    - name: "Off Loading the EC2 From ELB"
+      when: cloneValue.changed
+      pause:
+        seconds: "{{ health_time }}"  
+   
+    - name: "Copy all files from Clone directory to Document root"
+      when: cloneValue.changed
+      copy:
+        src: "{{ cloneDir }}"
+        dest: "{{ docRoot }}"
+        remote_src: true
+        owner: www-data
+        group: www-data
+    
+    - name: "Deleting contents of clone directory"
+      when: cloneValue.changed
+      file:
+        state: absent
+        path: "{{ cloneDir}}"    
+
+    - name: "Insert DNS name"
+      when: cloneValue.changed
+      lineinfile:
+        path: "{{ docRoot }}/index.html"
+        line: "{{ ansible_fqdn }}"
+        insertafter: <h6>Hostname</h6>
+
+    - name: "Restart/Enabled apache"
+      when: cloneValue.changed
+      service:
+        name: apache2
+        state: restarted
+        enabled: true
+
+    - name: "Enable HealthCheck"
+      when: cloneValue.changed
+      file:
+        path: "/var/www/html/health.txt"
+        state: file
+        mode: 0644
+
+    - name: "Loading the EC2 back to ELB"
+      when: cloneValue.changed
+      pause:
+        seconds: "{{ health_time }}"
+        
+    
