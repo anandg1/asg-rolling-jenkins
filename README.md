@@ -34,7 +34,7 @@ Solution is to automate the the process via Jenkins(Continuos Deployment). Once 
  ## Architecture:
 ![
 alt_txt
-]()
+](https://github.com/anandg1/asg-rolling-jenkins/blob/main/Architecture.png)
  ## Code:
  ```sh
  ---
