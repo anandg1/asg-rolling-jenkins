@@ -2,8 +2,8 @@
 - name: "Dynamic Invetory Of Autoscaling Group"
   hosts: localhost
   vars:
-    access_key: "AKIAYEN6726H5VGJZ3H6" 
-    secret_key: "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"
+    access_key: "xxxxxxxxxxxxxx" 
+    secret_key: "yyyyyyyyyyyyyyyyyyyyyyyyyyyyy"
     region: "ap-south-1"
 
   tasks:
