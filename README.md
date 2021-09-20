@@ -6,7 +6,7 @@ I going to demonstrate a rolling update for an auto-scaling group which contains
  
 ## Pre-requesites:
 
-- Basic Knowledge in AWS services, Ansible and Jenkins
+- Basic Knowledge in AWS services, Ansible and Jenkins.
 
 ## Features:
 - ASG Rolling update is possible using ansible-playbook,Jenkins and Git
